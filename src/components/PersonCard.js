@@ -8,58 +8,63 @@ const Error = props => {
 
 export default class PersonCard extends React.Component {
     state = {
-        button: 'Submit',
         name: '',
-        value: '',
+        paid: '',
+        willGet: '',
         inputInvalid: false,
-        inputMade: false
+        inputMade: false,
+        showAlternative: false
+    };
+
+    lockIn = () => {
+        this.setState({ showAlternative: true });
     };
 
     render(props) {
-        const submitMoney = e => {
+        const validateInput = () => {
             if (
                 !/^[a-zA-ZäöüÄÖÜß 1234567890]+$/.test(this.state.name) ||
                 this.state.name === '' ||
-                isNaN(this.state.value) ||
-                this.state.value === ''
+                isNaN(this.state.paid) ||
+                this.state.paid === ''
             ) {
-                this.setState({ inputInvalid: true });
+                this.setState({ inputInvalid: true, inputMade: false });
             } else {
                 this.setState({ inputMade: true, inputInvalid: false });
             }
-
-            console.log(this.state);
         };
 
         const handleNameChange = e => {
             this.setState({ name: e.target.value });
+            validateInput();
         };
 
-        const handleValueChange = e => {
-            this.setState({ value: e.target.value });
+        const handlePaidChange = e => {
+            this.setState({ paid: e.target.value });
+            validateInput();
         };
 
-        return this.state.inputMade ? (
+        return this.state.showAlternative ? (
             <div className='person-card'>
                 <h2 className='person-card-name'>Name: {this.state.name}</h2>
-                <h2 className='person-card-value'>Paid: {this.state.value}</h2>
+                <h2 className='person-card-paid'>Paid: {this.state.paid}</h2>
             </div>
         ) : (
             <div className='person-card'>
                 <input
                     type='name'
-                    value={this.state.name}
+                    paid={this.state.name}
                     placeholder='Person Name'
                     onChange={handleNameChange}
                 />
                 <input
                     type='number'
-                    value={this.state.value}
+                    paid={this.state.paid}
                     placeholder='Paid amount'
-                    onChange={handleValueChange}
+                    onChange={handlePaidChange}
                 />
                 <Error error={this.state.inputInvalid} />
-                <button onClick={submitMoney}>{this.state.button}</button>
+                <button onClick='handleInput'>Validate Inputs</button>
             </div>
         );
     }
