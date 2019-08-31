@@ -1,99 +1,194 @@
 import React from 'react';
 import './Controller.css';
-import PersonCard from './PersonCard';
+//import PersonCard from './PersonCard';
+
+const Error = props => {
+    if (props.error) return <p className='error-message'>Please check your Inputs...</p>;
+    else return null;
+};
+
+const PersonCard = props => {
+    return (
+        <div className='controller-items'>
+            {props.person.inputMade ? (
+                <div className='person-card'>
+                    <h2 className='person-card-name'>Name: {props.person.name}</h2>
+                    <h2 className='person-card-paid'>Paid: {props.person.paid}</h2>
+                    <h2 className='person-card-willGet'>
+                        Will get:{' '}
+                        {props.person.willGet === '' ? '...pending' : props.person.willGet}
+                    </h2>
+                </div>
+            ) : (
+                <div className='person-card'>
+                    <input
+                        type='name'
+                        paid={props.person.name}
+                        placeholder='Person Name'
+                        onChange={e => props.handleNameChange(e, props.person.id)}
+                    />
+                    <input
+                        type='number'
+                        paid={props.person.paid}
+                        placeholder='Has already paid'
+                        onChange={e => props.handlePaidChange(e, props.person.id)}
+                    />
+                    <Error error={props.person.inputInvalid} />
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default class Controller extends React.Component {
     state = {
+        id: 0,
         budget: '',
         PersonCards: [],
-        alternatives: [],
         inputInvalid: false,
         budgetSet: false,
         personAdded: false
     };
 
-    addPerson = () => {
-        const persons = [...this.state.PersonCards];
-        const alts = [...this.state.references];
+    validateInput = person => {
+        if (
+            !/^[a-zA-ZäöüÄÖÜß 1234567890]+$/.test(person.name) ||
+            person.name === '' ||
+            isNaN(person.paid) ||
+            person.paid === ''
+        )
+            return false;
+        else return true;
+    };
 
-        alts.push(false);
-        persons.push(<PersonCard />);
-        this.setState({ PersonCards: persons, references: alts, personAdded: true });
+    addPerson = () => {
+        let persons = [...this.state.PersonCards];
+        const id = this.state.id;
+        persons.push({
+            id: id,
+            name: '',
+            paid: '',
+            willGet: '',
+            inputInvalid: false,
+            inputMade: false
+        });
+        this.setState({ PersonCards: persons, personAdded: true, id: id + 1 });
     };
 
     checkAllPersonInputs = () => {
-        if (
-            this.state.PersonCards.every(person => {
-                return person.state.inputMade;
-            })
-        )
-            return true;
-        else return false;
-    };
+        let personList = [...this.state.PersonCards];
 
-    setAllPersonInputs = () => {
-        this.state.PersonCards.forEach((person, index) => person.setInput());
+        if (
+            personList.every((person, index) => {
+                if (this.validateInput(person)) {
+                    personList[index].inputMade = true;
+                    return true;
+                }
+                return false;
+            })
+        ) {
+            this.setState({ PersonCards: personList });
+            return true;
+        } else {
+            this.setState({ PersonCards: personList });
+            return false;
+        }
     };
 
     setBudget = e => {
-        this.setState({ budget: e.target.value });
+        e.persist();
+
+        if (isNaN(e.target.value)) {
+            e.target.value = '';
+            e.target.placeholder = 'Please enter a valid number...';
+        } else this.setState({ budget: e.target.value });
     };
 
-    computeResults = e => {
-        this.setAllPersonInputs();
-
-        if (!this.checkAllPersonInputs) return false;
+    computeResults = () => {
+        if (!this.checkAllPersonInputs()) return false;
         else if (isNaN(this.state.budget)) {
             this.setState({ inputInvalid: true });
             return false;
-        } else if (this.state.budget === '')
+        } else if (this.state.budget === '') {
             this.setState({ budget: 0, inputInvalid: false, budgetSet: true });
-        else this.setState({ budgetSet: true, inputInvalid: false });
+            this.computeEndResults();
+        } else {
+            this.setState({ budgetSet: true, inputInvalid: false });
+            this.computeEndResults();
+        }
+    };
 
-        this.state.PersonCards.forEach((person, index) => {
-            this.state.references[index].current.lockIn();
+    computeEndResults = () => {
+        let persons = [...this.state.PersonCards];
+        const amount = this.state.budget / persons.length;
+
+        persons.forEach(person => {
+            person.willGet = person.paid - amount;
         });
 
-        console.log('lol', this.state);
+        this.setState({ PersonCards: persons });
+    };
+
+    handleNameChange = (e, id) => {
+        let persons = [...this.state.PersonCards];
+        persons[id].name = e.target.value;
+
+        this.setState({ PersonCards: persons });
+    };
+
+    handlePaidChange = (e, id) => {
+        let persons = [...this.state.PersonCards];
+        persons[id].paid = e.target.value;
+
+        this.setState({ PersonCards: persons });
     };
 
     render() {
-        let computeButton = this.state.personAdded ? (
-            <button className='compute-button' onClick={this.computeResults}>
-                Compute results
-            </button>
-        ) : null;
+        const computeButton =
+            this.state.personAdded && !this.state.budgetSet ? (
+                <button className='compute-button' onClick={this.computeResults}>
+                    Compute results
+                </button>
+            ) : null;
 
-        return !this.state.budgetSet ? (
+        const budgetInput = this.state.budgetSet ? (
+            <h1> Budget: {this.state.budget}</h1>
+        ) : (
+            <input
+                type='number'
+                className='budget-input'
+                placeholder='Enter a budget...'
+                value={this.state.budget}
+                onChange={this.setBudget}
+            ></input>
+        );
+
+        const addPersonButton =
+            !this.state.budgetSet && !this.state.inputInvalid ? (
+                <button onClick={this.addPerson}>Add Person</button>
+            ) : null;
+
+        return (
             <div className='controller'>
                 <div className='head'>
-                    <input
-                        type='number'
-                        className='budget-input'
-                        placeholder='Enter a budget...'
-                        value={this.state.budget}
-                        onChange={this.setBudget}
-                    ></input>
+                    {budgetInput}
                     {computeButton}
                 </div>
 
-                <button onClick={this.addPerson}>Add Person</button>
                 <div className='controller-items'>
-                    {this.state.PersonCards.map((personCard, index) => (
-                        <div key={index}>{personCard}</div>
-                    ))}
+                    {this.state.PersonCards.map(person => {
+                        return (
+                            <PersonCard
+                                key={person.id}
+                                person={person}
+                                handleNameChange={this.handleNameChange}
+                                handlePaidChange={this.handlePaidChange}
+                            />
+                        );
+                    })}
                 </div>
-            </div>
-        ) : (
-            <div className='controller'>
-                <div className='head head-after'>
-                    <h1> Budget: {this.state.budget}</h1>
-                </div>
-                <div className='controller-items'>
-                    {this.state.PersonCards.map((personCard, index) => (
-                        <div key={index}>{personCard}</div>
-                    ))}
-                </div>
+
+                {addPersonButton}
             </div>
         );
     }
