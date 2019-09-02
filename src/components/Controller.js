@@ -68,7 +68,7 @@ export default class Controller extends React.Component {
             id: id,
             name: '',
             paid: '',
-            willGet: '',
+            willGet: 0,
             inputInvalid: false,
             inputMade: false
         });
@@ -118,13 +118,32 @@ export default class Controller extends React.Component {
         }
     };
 
+    getSumOfPaid = () => {
+        let sumOfPaid = 0;
+
+        for (let i = 0; i < this.state.PersonCards.length; i++) {
+            sumOfPaid += parseFloat(this.state.PersonCards[i].paid);
+        }
+        console.log(sumOfPaid);
+        return sumOfPaid;
+    };
+
     computeEndResults = () => {
         let persons = [...this.state.PersonCards];
-        const amount = this.state.budget / persons.length;
+        const sumOfPaid = this.getSumOfPaid();
 
-        persons.forEach(person => {
-            person.willGet = person.paid - amount;
-        });
+        const paidOverBudget = parseFloat(this.state.budget) - sumOfPaid;
+
+        if (paidOverBudget >= 0)
+            persons.forEach(person => {
+                person.willGet = parseFloat(person.paid);
+            });
+        else
+            persons.forEach(person => {
+                person.willGet =
+                    parseFloat(person.paid) -
+                    (sumOfPaid - parseFloat(this.state.budget)) / persons.length;
+            });
 
         this.setState({ PersonCards: persons });
     };
