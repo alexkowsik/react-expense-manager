@@ -1,5 +1,5 @@
 # Group Expense Manager
 
-A very simple app to track group expenditure with an optional budget.
+A simple app to track group expenditure with an optional budget.
 
 Built with React and deployed via Netlify [here](https://alexkowsik-expense-manager.netlify.com/).
