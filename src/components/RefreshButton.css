@@ -1,13 +1,13 @@
 .refresh-button {
-    position: fixed;
-    bottom: 50px;
-    right: 50px;
-    height: 90px;
-    width: 120px;
-    border-radius: 50%;
-    font-size: 1.3rem;
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  height: 90px;
+  width: 120px;
+  border-radius: 50%;
+  font-size: 1.3rem;
 }
 
 .refresh-button:hover {
-    background: #fff;
+  background: #fff;
 }
